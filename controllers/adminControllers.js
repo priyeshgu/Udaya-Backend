@@ -91,7 +91,7 @@ exports.getJobCandidates = async (req, res) => {
 // Controller function to get jobs based on filters
 exports.getConditionalJobs = async (req, res) => {
     try {
-        const {status} = req.body
+      const { status } = req.query; 
       // Fetch all active jobs from the database
       const Jobs = await Job.findAll({ where: { 'status': status } });
   
