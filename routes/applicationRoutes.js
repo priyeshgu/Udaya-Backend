@@ -6,5 +6,6 @@ const router = express.Router();
 
 router.post('/apply', applicationController.applyForJob);
 router.get('/', applicationController.getActiveJobs);
+router.get('/job_details', applicationController.getJobDetails);
 
 module.exports = router;

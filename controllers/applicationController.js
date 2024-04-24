@@ -36,7 +36,8 @@ exports.applyForJob = async (req, res) => {
 exports.getActiveJobs = async (req, res) => {
     try {
       // Fetch all active jobs from the database
-      const activeJobs = await Job.findAll({ where: { 'status': 'active' } });
+      const activeJobs = await Job.findAll({ where: { 'status': 'active' },
+      attributes: ['job_id','post', 'company_name', 'location', 'remote'] });
   
       // Return the list of active jobs in the response
       res.status(200).json({ activeJobs });
@@ -45,3 +46,23 @@ exports.getActiveJobs = async (req, res) => {
       res.status(500).json({ message: 'Failed to fetch active jobs', error: error.message });
     }
   };
+
+
+  exports.getJobDetails = async (req, res) => {
+    try {
+        const { job_id } = req.body;
+
+        // Find the job by its ID
+        const job = await Job.findOne({ where: { job_id } });
+
+        if (!job) {
+            return res.status(404).json({ message: 'Job not found' });
+        }
+
+        // Return the job details in the response
+        res.status(200).json({ job });
+    } catch (error) {
+        // Handle errors
+        res.status(500).json({ message: 'Failed to fetch job details', error: error.message });
+    }
+};
