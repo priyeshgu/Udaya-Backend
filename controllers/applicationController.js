@@ -50,7 +50,7 @@ exports.getActiveJobs = async (req, res) => {
 
   exports.getJobDetails = async (req, res) => {
     try {
-        const { job_id } = req.body;
+        const { job_id } = req.query;
 
         // Find the job by its ID
         const job = await Job.findOne({ where: { job_id } });
