@@ -172,3 +172,41 @@ exports.getConditionalJobs = async (req, res) => {
       res.status(500).json({ message: 'Internal server error' });
     }
   };
+
+
+  exports.getJobCandidates2 = async (req, res) => {
+    try {
+      const jobId = req.params.job_id;
+      const { status } = req.query;
+  
+      let jobCandidates;
+      if (status === 'all') {
+        // Find all candidates for the job regardless of status
+        jobCandidates = await CandidateJobMapping.findAll({
+          where: { job_id: jobId },
+          include: [{ model: Candidate }]
+        });
+      } else {
+        // Validate if the provided status is one of the enum values
+        const statusEnumValues = CandidateJobMapping.rawAttributes.status.values;
+        if (!statusEnumValues.includes(status)) {
+          return res.status(400).json({ message: 'Invalid status value' });
+        }
+  
+        // Find candidates for the job with the specified status
+        jobCandidates = await CandidateJobMapping.findAll({
+          where: { job_id: jobId, status },
+          include: [{ model: Candidate }]
+        });
+      }
+  
+      if (!jobCandidates || jobCandidates.length === 0) {
+        return res.status(404).json({ message: 'No candidates found for this job' });
+      }
+  
+      const candidates = jobCandidates.map(candidateMapping => candidateMapping.candidate);
+      res.status(200).json({ candidates });
+    } catch (error) {
+      res.status(500).json({ message: 'Internal server error', error: error.message });
+    }
+  };
