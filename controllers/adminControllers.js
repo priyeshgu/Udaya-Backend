@@ -4,7 +4,6 @@ const  Job  = require('../models/jobs');
 const Candidate = require('../models/candidates');
 const CandidateJobMapping = require('../models/candidates_jobs_map');
 const sequelize = require('../config/db');
-const { connect } = require('../routes/applicationRoutes');
 
 // POST endpoint to create a new job
 exports.createJob = async (req, res) => {
@@ -34,7 +33,7 @@ exports.createJob = async (req, res) => {
 // Controller function to edit a job
 exports.editJob = async (req, res) => {
   try {
-    const job_id = req.params.id;
+    const job_id = req.params.job_id;
     const { company_name, job_description, skills, openings, salary_offered, post, location, remote, status, years_of_experience, keywords } = req.body;
 
     // Find the job by ID
@@ -70,7 +69,7 @@ exports.editJob = async (req, res) => {
 // Controller function to get candidates applied to a job
 exports.getJobCandidates = async (req, res) => {
     try {
-      const jobId = req.params.id;
+      const jobId = req.params.job_id;
   
       // Find candidates for the job using CandidateJobMapping
       const jobCandidates = await CandidateJobMapping.findAll({
@@ -108,3 +107,35 @@ exports.getConditionalJobs = async (req, res) => {
       res.status(500).json({ message: 'Failed to fetch active jobs', error: error.message });
     }
   };
+
+
+  exports.getCandidate = async (req, res) => {
+    try {
+      const jobId = req.params.job_id;
+      const candidateId = req.params.candidate_id;
+  
+      // Check if the job_id and candidate_id exist in the same row in the job_candidate_mapping table
+      const jobCandidateMapping = await CandidateJobMapping.findOne({
+        where: { job_id: jobId, user_id: candidateId }
+      });
+  
+      if (!jobCandidateMapping) {
+        return res.status(404).json({ message: 'Job candidate mapping not found' });
+      }
+  
+      // If the mapping exists, get the candidate details from the candidates table
+      const candidate = await Candidate.findOne({ where: { user_id: candidateId } });
+  
+      if (!candidate) {
+        return res.status(404).json({ message: 'Candidate not found' });
+      }
+  
+      // Return the candidate details
+      res.status(200).json({ candidate });
+    } catch (error) {
+      // Handle errors
+      console.error('Error:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  };
+  
