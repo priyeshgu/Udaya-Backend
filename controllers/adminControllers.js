@@ -139,3 +139,36 @@ exports.getConditionalJobs = async (req, res) => {
     }
   };
   
+
+  exports.editCandidateStatus= async (req, res) => {
+    try {
+      const jobId = req.params.job_id;
+      const candidateId = req.params.candidate_id;
+      const { status } = req.body;
+  
+      // Fetch the enum values for the status field from the model
+      const statusEnumValues = CandidateJobMapping.rawAttributes.status.values;
+  
+      // Validate status value against the fetched enum values
+      if (!statusEnumValues.includes(status)) {
+        return res.status(400).json({ message: 'Invalid status value' });
+      }
+  
+      // Update the status field in the jobcandidatemapping table
+      const [updatedRowsCount, [updatedCandidateMapping]] = await CandidateJobMapping.update(
+        { status },
+        { where: { job_id: jobId, user_id: candidateId }, returning: true }
+      );
+  
+      if (updatedRowsCount === 0) {
+        return res.status(404).json({ message: 'Candidate mapping not found' });
+      }
+  
+      // Return the updated candidate mapping
+      res.status(200).json({ candidateMapping: updatedCandidateMapping });
+    } catch (error) {
+      // Handle errors
+      console.error('Error:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  };
