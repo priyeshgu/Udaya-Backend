@@ -55,6 +55,14 @@ const jobs = db.define('jobs', {
     type: DataTypes.DATE,
     allowNull: false,
     defaultValue: DataTypes.NOW
+  },
+  years_of_experience: {
+    type: DataTypes.INTEGER,
+    allowNull: false
+  },
+  keywords: {
+    type: DataTypes.ARRAY(DataTypes.STRING),
+    allowNull: false
   }
 });
 

@@ -4,6 +4,7 @@ const Job = require('../models/jobs');
 const { v4: uuidv4 } = require('uuid');
 const sequelize = require('../config/db');
 const CandidateJobMapping = require('../models/candidates_jobs_map');
+const { Op } = require('sequelize');
 
 exports.applyForJob = async (req, res) => {
   try {
@@ -65,4 +66,44 @@ exports.getActiveJobs = async (req, res) => {
         // Handle errors
         res.status(500).json({ message: 'Failed to fetch job details', error: error.message });
     }
+};
+
+exports.filterJobs = async (req, res) => {
+  try {
+      const { keywords, years_of_experience, location, remote } = req.body;
+
+      // Initialize an empty filter object
+      let filter = {};
+
+      // Add conditions for fields that are present in the request body
+      if (keywords) {
+          filter.keywords = {
+              [Op.contains]: keywords // Check if keywords array contains any of the provided keywords
+          };
+      }
+      if (years_of_experience) {
+          filter.years_of_experience = years_of_experience;
+      }
+      if (location) {
+          filter.location = location;
+      }
+      if (remote) {
+          filter.remote = remote;
+      }
+      filter.status='active'
+
+      // Filter jobs based on the filter object
+      const filteredJobs = await Job.findAll({ where: filter ,
+      attributes: ['job_id','post', 'company_name', 'location', 'remote']});
+
+      if (filteredJobs.length === 0) {
+        return res.status(404).json({ message: 'Jobs matching your prefernces not found' });
+    }
+
+      // Return the filtered jobs in the response
+      res.status(200).json({ filteredJobs });
+  } catch (error) {
+      // Handle errors
+      res.status(500).json({ message: 'Failed to filter jobs', error: error.message });
+  }
 };

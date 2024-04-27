@@ -9,14 +9,14 @@ const sequelize = require('../config/db');
 exports.createJob = async (req, res) => {
  try {
     // Extract job details from the request body
-    const { company_name, job_description, skills, openings, salary_offered, post, location, remote } = req.body;
+    const { company_name, job_description, skills, openings, salary_offered, post, location, remote, status, years_of_experience, keywords } = req.body;
 
     // Generate a unique job ID
     const job_id = uuidv4();
     const createdAt = sequelize.literal('CURRENT_TIMESTAMP AT TIME ZONE \'Asia/Kolkata\'');
 
     // Create the job in the database
-    const newJob = await Job.create({job_id, company_name, job_description, skills, openings, salary_offered, post, location, remote, createdAt  });
+    const newJob = await Job.create({job_id, company_name, job_description, skills, openings, salary_offered, post, location, remote, createdAt, status, years_of_experience, keywords });
 
     // Respond with success message and the created job data
     res.status(201).json({
@@ -34,7 +34,7 @@ exports.createJob = async (req, res) => {
 exports.editJob = async (req, res) => {
   try {
     const job_id = req.params.id;
-    const { company_name, job_description, skills, openings, salary_offered, post, location, remote, status } = req.body;
+    const { company_name, job_description, skills, openings, salary_offered, post, location, remote, status, years_of_experience, keywords } = req.body;
 
     // Find the job by ID
     const job = await Job.findOne({ where: { job_id } });
@@ -53,6 +53,8 @@ exports.editJob = async (req, res) => {
     job.location = location;
     job.remote = remote;
     job.status = status;
+    job.years_of_experience = years_of_experience;
+    job.keywords = keywords;
 
     // Save the changes to the database
     await job.save();
