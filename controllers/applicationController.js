@@ -5,6 +5,7 @@ const { v4: uuidv4 } = require('uuid');
 const sequelize = require('../config/db');
 const CandidateJobMapping = require('../models/candidates_jobs_map');
 const { Op } = require('sequelize');
+const upload = require('../middlewares/uploadMiddelware');
 
 exports.applyForJob = async (req, res) => {
   try {
@@ -105,5 +106,20 @@ exports.filterJobs = async (req, res) => {
   } catch (error) {
       // Handle errors
       res.status(500).json({ message: 'Failed to filter jobs', error: error.message });
+  }
+};
+
+
+exports.uploadResume = (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ message: 'No file uploaded' });
+    }
+    const fileLocation = req.file.path; // Path of the uploaded file
+    console.log(fileLocation,119)
+    // Perform any additional processing (e.g., saving file location to database)
+    res.status(200).json({ fileLocation });
+  } catch (error) {
+    res.status(500).json({ message: 'Error uploading file', error: error.message });
   }
 };

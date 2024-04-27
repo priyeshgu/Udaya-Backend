@@ -4,6 +4,7 @@ const  Job  = require('../models/jobs');
 const Candidate = require('../models/candidates');
 const CandidateJobMapping = require('../models/candidates_jobs_map');
 const sequelize = require('../config/db');
+const { connect } = require('../routes/applicationRoutes');
 
 // POST endpoint to create a new job
 exports.createJob = async (req, res) => {
@@ -96,9 +97,12 @@ exports.getConditionalJobs = async (req, res) => {
       const { status } = req.query; 
       // Fetch all active jobs from the database
       const Jobs = await Job.findAll({ where: { 'status': status } });
-  
-      // Return the list of active jobs in the response
-      res.status(200).json({ Jobs });
+      const jobsWithApplicantCount = await Promise.all(Jobs.map(async job => {
+        const applicantCount = await CandidateJobMapping.count({ where: { job_id: job.job_id } });
+        console.log(job,102)
+        return { ...job.toJSON(), applicantCount };
+      }));
+      res.status(200).json({ jobs: jobsWithApplicantCount });
     } catch (error) {
       // Handle errors
       res.status(500).json({ message: 'Failed to fetch active jobs', error: error.message });
