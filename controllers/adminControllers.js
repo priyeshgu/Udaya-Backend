@@ -3,6 +3,7 @@ const { v4: uuidv4 } = require('uuid');
 const  Job  = require('../models/jobs');
 const Candidate = require('../models/candidates');
 const CandidateJobMapping = require('../models/candidates_jobs_map');
+const AttributeTokens = require('../models/attribute_tokens');
 const sequelize = require('../config/db');
 
 // POST endpoint to create a new job
