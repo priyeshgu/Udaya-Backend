@@ -55,6 +55,7 @@ exports.editJob = async (req, res) => {
     job.status = status;
     job.years_of_experience = years_of_experience;
     job.keywords = keywords;
+    job.updatedAt = new Date();
 
     // Save the changes to the database
     await job.save();
@@ -67,27 +68,27 @@ exports.editJob = async (req, res) => {
 
 
 // Controller function to get candidates applied to a job
-exports.getJobCandidates = async (req, res) => {
-    try {
-      const jobId = req.params.job_id;
+// exports.getJobCandidates = async (req, res) => {
+//     try {
+//       const jobId = req.params.job_id;
   
-      // Find candidates for the job using CandidateJobMapping
-      const jobCandidates = await CandidateJobMapping.findAll({
-        where: { job_id: jobId },
-        include: [{ model: Candidate }]
-      });
-      console.log(jobCandidates)
+//       // Find candidates for the job using CandidateJobMapping
+//       const jobCandidates = await CandidateJobMapping.findAll({
+//         where: { job_id: jobId },
+//         include: [{ model: Candidate }]
+//       });
+//       console.log(jobCandidates)
   
-      if (!jobCandidates) {
-        return res.status(404).json({ message: 'No candidates found for this job' });
-      }
+//       if (!jobCandidates) {
+//         return res.status(404).json({ message: 'No candidates found for this job' });
+//       }
   
-      const candidates = jobCandidates.map(candidateMapping => candidateMapping.candidate);
-      res.status(200).json({ candidates });
-    } catch (error) {
-      res.status(400).json({ message: error.message });
-    }
-  };
+//       const candidates = jobCandidates.map(candidateMapping => candidateMapping.candidate);
+//       res.status(200).json({ candidates });
+//     } catch (error) {
+//       res.status(400).json({ message: error.message });
+//     }
+//   };
 
 
 // Controller function to get jobs based on filters
@@ -95,10 +96,9 @@ exports.getConditionalJobs = async (req, res) => {
     try {
       const { status } = req.query; 
       // Fetch all active jobs from the database
-      const Jobs = await Job.findAll({ where: { 'status': status } });
+      const Jobs = await Job.findAll({ where: { 'status': status },order: [['updatedAt', 'DESC']] });
       const jobsWithApplicantCount = await Promise.all(Jobs.map(async job => {
         const applicantCount = await CandidateJobMapping.count({ where: { job_id: job.job_id } });
-        console.log(job,102)
         return { ...job.toJSON(), applicantCount };
       }));
       res.status(200).json({ jobs: jobsWithApplicantCount });
@@ -116,7 +116,7 @@ exports.getConditionalJobs = async (req, res) => {
   
       // Check if the job_id and candidate_id exist in the same row in the job_candidate_mapping table
       const jobCandidateMapping = await CandidateJobMapping.findOne({
-        where: { job_id: jobId, user_id: candidateId }
+        where: { job_id: jobId, user_id: candidateId ,order: [['updatedAt', 'DESC']]}
       });
   
       if (!jobCandidateMapping) {
@@ -174,7 +174,7 @@ exports.getConditionalJobs = async (req, res) => {
   };
 
 
-  exports.getJobCandidates2 = async (req, res) => {
+  exports.getJobCandidates = async (req, res) => {
     try {
       const jobId = req.params.job_id;
       const { status } = req.query;

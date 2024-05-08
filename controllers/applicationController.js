@@ -39,7 +39,7 @@ exports.getActiveJobs = async (req, res) => {
     try {
       // Fetch all active jobs from the database
       const activeJobs = await Job.findAll({ where: { 'status': 'active' },
-      attributes: ['job_id','post', 'company_name', 'location', 'remote'] });
+      attributes: ['job_id','post', 'company_name', 'location', 'remote'],order: [['updatedAt', 'DESC']] });
   
       // Return the list of active jobs in the response
       res.status(200).json({ activeJobs });
