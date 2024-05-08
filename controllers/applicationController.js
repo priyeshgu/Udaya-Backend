@@ -116,8 +116,6 @@ exports.uploadResume = (req, res) => {
       return res.status(400).json({ message: 'No file uploaded' });
     }
     const fileLocation = req.file.path; // Path of the uploaded file
-    console.log(fileLocation,119)
-    // Perform any additional processing (e.g., saving file location to database)
     res.status(200).json({ fileLocation });
   } catch (error) {
     res.status(500).json({ message: 'Error uploading file', error: error.message });
