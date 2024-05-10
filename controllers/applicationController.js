@@ -5,7 +5,6 @@ const { v4: uuidv4 } = require('uuid');
 const sequelize = require('../config/db');
 const CandidateJobMapping = require('../models/candidates_jobs_map');
 const { Op } = require('sequelize');
-const upload = require('../middlewares/uploadMiddelware');
 
 exports.applyForJob = async (req, res) => {
   try {
@@ -121,3 +120,98 @@ exports.uploadResume = (req, res) => {
     res.status(500).json({ message: 'Error uploading file', error: error.message });
   }
 };
+
+
+exports.putMatchScore = async (req, res) => {
+  try {
+      // Fetch candidate_id and job_id from query parameters
+      const { user_id, job_id } = req.body;
+      // Validate input
+      if (!user_id || !job_id) {
+          return res.status(400).json({ message: 'user_id and job_id are required' });
+      }
+
+      // Fetch candidate from database
+      const candidate = await Candidate.findOne({ where: { user_id: user_id } });
+      if (!candidate) {
+          return res.status(404).json({ message: 'Candidate not found' });
+      }
+
+      // Fetch job from database
+      const job = await Job.findOne({ where: { job_id: job_id } });
+      if (!job) {
+          return res.status(404).json({ message: 'Job not found' });
+      }
+      const jobCandidateMapping = await CandidateJobMapping.findOne({ where: { user_id, job_id } });
+      if (!jobCandidateMapping) {
+          return res.status(404).json({ message: 'Job candidate mapping not found' });
+      }
+      const matchScore = calculateMatchScore(candidate, job);
+
+      jobCandidateMapping.match_score = matchScore;
+      await jobCandidateMapping.save();
+
+      // Return match score
+      res.status(200).json({ matchScore });
+  } catch (error) {
+      console.error('Error calculating match score:', error);
+      res.status(500).json({ message: 'Failed to calculate match score', error: error.message });
+  }
+};
+function calculateMatchScore(candidate, job) {
+  // Define weights for each criterion
+  const weights = {
+      yearsOfExperience: 0.2,
+      remoteStatus: 0.1,
+      salaryOffered: 0.3,
+      skills: 0.4
+  };
+
+  // Calculate scores for each criterion
+  const yearsOfExperienceScore = calculateYearsOfExperienceScore(candidate.years_of_experience, job.years_of_experience);
+  const remoteStatusScore = candidate.remotePreference === job.remoteStatus ? 1 : 0; // Binary score
+  const salaryOfferedScore = calculateSalaryScore(candidate.expected_salary, job.salary_offered);
+  const skillsScore = calculateSkillsScore(candidate.skills, job.skills);
+
+  // Calculate the weighted sum of scores
+  const weightedSum = (
+      weights.yearsOfExperience * yearsOfExperienceScore +
+      weights.remoteStatus * remoteStatusScore +
+      weights.salaryOffered * salaryOfferedScore +
+      weights.skills * skillsScore
+  );
+
+  // Return the overall match score
+  return weightedSum;
+}
+
+function calculateYearsOfExperienceScore(candidateExperience, jobExperienceRequirement) {
+let difference;
+if (candidateExperience >= jobExperienceRequirement) {
+    // Candidate's experience is greater than or equal to job's reference experience
+    difference = 0;
+} else {
+    // Candidate's experience is less than job's reference experience
+    difference = candidateExperience - jobExperienceRequirement;
+}
+// Example: Higher score for closer match
+return Math.max(0, 1 - Math.abs(difference) / 10); // Adjust divisor for scaling
+}
+
+function calculateSalaryScore(candidateSalary, jobSalaryRange) {
+  let difference;
+  if (jobSalaryRange >= candidateSalary) {
+      difference = 0;
+  } else {
+      difference = jobSalaryRange - candidateSalary;
+  }
+  return Math.max(0, 1 - Math.abs(difference) / 100000);
+}
+
+function calculateSkillsScore(candidateSkills, requiredSkills) {
+  const candidateSkillsArray = candidateSkills.split(', ')
+  const requiredSkillsArray = requiredSkills.split(', ')
+  const intersection = candidateSkillsArray.filter(skill => requiredSkills.includes(skill));
+  const overlapRatio = intersection.length / requiredSkillsArray.length;
+  return overlapRatio;
+}

@@ -185,7 +185,8 @@ exports.getConditionalJobs = async (req, res) => {
         // Find all candidates for the job regardless of status
         jobCandidates = await CandidateJobMapping.findAll({
           where: { job_id: jobId },
-          include: [{ model: Candidate }]
+          include: [{ model: Candidate}], 
+          attributes: ['match_score'] 
         });
       } else {
         // Validate if the provided status is one of the enum values
@@ -197,7 +198,8 @@ exports.getConditionalJobs = async (req, res) => {
         // Find candidates for the job with the specified status
         jobCandidates = await CandidateJobMapping.findAll({
           where: { job_id: jobId, status },
-          include: [{ model: Candidate }]
+          include: [{ model: Candidate}],
+          attributes: ['match_score']
         });
       }
   
@@ -205,9 +207,52 @@ exports.getConditionalJobs = async (req, res) => {
         return res.status(404).json({ message: 'No candidates found for this job' });
       }
   
-      const candidates = jobCandidates.map(candidateMapping => candidateMapping.candidate);
+      const candidates = jobCandidates.map(candidateMapping => ({
+        ...candidateMapping.candidate.toJSON(),
+        match_score: candidateMapping.match_score // Add match_score to each candidate object
+      }));
       res.status(200).json({ candidates });
     } catch (error) {
       res.status(500).json({ message: 'Internal server error', error: error.message });
     }
   };
+
+
+  exports.addToken = async (req, res) => {
+    try {
+        // Parse data from request body
+        const { type, tokens } = req.body;
+  
+        // Validate input data
+        if (!type || !tokens || !Array.isArray(tokens) || tokens.length === 0) {
+            return res.status(400).json({ message: 'Type and non-empty array of tokens are required' });
+        }
+        
+        const typeEnumValues = AttributeTokens.rawAttributes.type.values;
+  
+        // Validate status value against the fetched enum values
+        if (!typeEnumValues.includes(type)) {
+            return res.status(404).json({ message: 'Attribute not found' });
+        }
+
+        const [attribute, created] = await AttributeTokens.findOrCreate({
+            where: { type },
+            defaults: { name: type, tokens: [] } // Default value for tokens field
+        });
+  
+        // Filter out any tokens that already exist in the list
+        const newTokens = tokens.filter(token => !attribute.tokens.includes(token));
+
+        // Add the new tokens to the list
+        attribute.tokens = [...attribute.tokens, ...newTokens];
+
+        // Save the updated attribute
+        await attribute.save();
+  
+        // Send success response
+        res.status(200).json({ message: 'Tokens added successfully', attribute });
+    } catch (error) {
+        console.error('Error adding tokens:', error);
+        res.status(500).json({ message: 'Failed to add tokens', error: error.message });
+    }
+};

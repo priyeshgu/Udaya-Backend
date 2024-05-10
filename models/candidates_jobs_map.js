@@ -19,6 +19,10 @@ const candidates_jobs_mapping = db.define('candidates_jobs_mapping', {
     type: DataTypes.DATE,
     allowNull: false,
     defaultValue: DataTypes.NOW
+  },
+  match_score: {
+    type: DataTypes.FLOAT, // Assuming match_score is a floating-point number
+    allowNull: true // Adjust this based on your requirements
   }
 });
 
