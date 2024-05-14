@@ -8,14 +8,14 @@ const app = express();
 // Sync the models with the database
 (async () => {
   try {
-    await sequelize.sync({ alter: true }); // Set force: true to drop and recreate the tables on each run
+    await sequelize.sync({ force: true }); // Set force: true to drop and recreate the tables on each run
     console.log("Database synchronized");
   } catch (error) {
     console.error("Error synchronizing database:", error);
   }
 })();
 const corsOptions = {
-  origin: "http://localhost:3000",
+  origin: "https://udaya-3750c.firebaseapp.com",
   methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
   credentials: true,
 };
