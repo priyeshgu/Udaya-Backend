@@ -209,9 +209,9 @@ function calculateSalaryScore(candidateSalary, jobSalaryRange) {
 }
 
 function calculateSkillsScore(candidateSkills, requiredSkills) {
-  const candidateSkillsArray = candidateSkills.split(', ')
-  const requiredSkillsArray = requiredSkills.split(', ')
-  const intersection = candidateSkillsArray.filter(skill => requiredSkills.includes(skill));
-  const overlapRatio = intersection.length / requiredSkillsArray.length;
+  console.log(candidateSkills,requiredSkills)
+  const intersection = candidateSkills.filter(skill => requiredSkills.includes(skill));
+  const overlapRatio = intersection.length / requiredSkills.length;
+  console.log(intersection,overlapRatio)
   return overlapRatio;
 }

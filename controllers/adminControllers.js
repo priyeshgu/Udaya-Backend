@@ -69,27 +69,31 @@ exports.editJob = async (req, res) => {
 
 
 // Controller function to get candidates applied to a job
-// exports.getJobCandidates = async (req, res) => {
-//     try {
-//       const jobId = req.params.job_id;
-  
-//       // Find candidates for the job using CandidateJobMapping
-//       const jobCandidates = await CandidateJobMapping.findAll({
-//         where: { job_id: jobId },
-//         include: [{ model: Candidate }]
-//       });
-//       console.log(jobCandidates)
-  
-//       if (!jobCandidates) {
-//         return res.status(404).json({ message: 'No candidates found for this job' });
-//       }
-  
-//       const candidates = jobCandidates.map(candidateMapping => candidateMapping.candidate);
-//       res.status(200).json({ candidates });
-//     } catch (error) {
-//       res.status(400).json({ message: error.message });
-//     }
-//   };
+exports.getJobCandidates = async (req, res) => {
+  try {
+    const jobId = req.params.job_id;
+
+    // Find candidates for the job using CandidateJobMapping
+    const jobCandidates = await CandidateJobMapping.findAll({
+      where: { job_id: jobId },
+      include: [{ model: Candidate }],
+      attributes: ['match_score'],
+      order: [['updatedAt', 'DESC']]
+    });
+    console.log(jobCandidates)
+
+    if (!jobCandidates) {
+      return res.status(404).json({ message: 'No candidates found for this job' });
+    }
+
+    const candidates = jobCandidates.map(candidateMapping =>({ ...candidateMapping.candidate.toJSON(),
+    match_score: candidateMapping.match_score
+    }))
+    res.status(200).json({ candidates });
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+};
 
 
 // Controller function to get jobs based on filters
@@ -117,7 +121,7 @@ exports.getConditionalJobs = async (req, res) => {
   
       // Check if the job_id and candidate_id exist in the same row in the job_candidate_mapping table
       const jobCandidateMapping = await CandidateJobMapping.findOne({
-        where: { job_id: jobId, user_id: candidateId ,order: [['updatedAt', 'DESC']]}
+        where: { job_id: jobId, user_id: candidateId }
       });
   
       if (!jobCandidateMapping) {
@@ -175,47 +179,49 @@ exports.getConditionalJobs = async (req, res) => {
   };
 
 
-  exports.getJobCandidates = async (req, res) => {
-    try {
-      const jobId = req.params.job_id;
-      const { status } = req.query;
+  // exports.getJobCandidates = async (req, res) => {
+  //   try {
+  //     const jobId = req.params.job_id;
+  //     const { status } = req.query;
   
-      let jobCandidates;
-      if (status === 'all') {
-        // Find all candidates for the job regardless of status
-        jobCandidates = await CandidateJobMapping.findAll({
-          where: { job_id: jobId },
-          include: [{ model: Candidate}], 
-          attributes: ['match_score'] 
-        });
-      } else {
-        // Validate if the provided status is one of the enum values
-        const statusEnumValues = CandidateJobMapping.rawAttributes.status.values;
-        if (!statusEnumValues.includes(status)) {
-          return res.status(400).json({ message: 'Invalid status value' });
-        }
+  //     let jobCandidates;
+  //     if (status === 'all') {
+  //       // Find all candidates for the job regardless of status
+  //       jobCandidates = await CandidateJobMapping.findAll({
+  //         where: { job_id: jobId },
+  //         include: [{ model: Candidate}], 
+  //         attributes: ['match_score'],
+  //         order: [['updatedAt', 'DESC']]
+  //       });
+  //     } else {
+  //       // Validate if the provided status is one of the enum values
+  //       const statusEnumValues = CandidateJobMapping.rawAttributes.status.values;
+  //       if (!statusEnumValues.includes(status)) {
+  //         return res.status(400).json({ message: 'Invalid status value' });
+  //       }
   
-        // Find candidates for the job with the specified status
-        jobCandidates = await CandidateJobMapping.findAll({
-          where: { job_id: jobId, status },
-          include: [{ model: Candidate}],
-          attributes: ['match_score']
-        });
-      }
+  //       // Find candidates for the job with the specified status
+  //       jobCandidates = await CandidateJobMapping.findAll({
+  //         where: { job_id: jobId, status },
+  //         include: [{ model: Candidate}],
+  //         attributes: ['match_score'],
+  //         order: [['updatedAt', 'DESC']]
+  //       });
+  //     }
   
-      if (!jobCandidates || jobCandidates.length === 0) {
-        return res.status(404).json({ message: 'No candidates found for this job' });
-      }
+  //     if (!jobCandidates || jobCandidates.length === 0) {
+  //       return res.status(404).json({ message: 'No candidates found for this job' });
+  //     }
   
-      const candidates = jobCandidates.map(candidateMapping => ({
-        ...candidateMapping.candidate.toJSON(),
-        match_score: candidateMapping.match_score // Add match_score to each candidate object
-      }));
-      res.status(200).json({ candidates });
-    } catch (error) {
-      res.status(500).json({ message: 'Internal server error', error: error.message });
-    }
-  };
+  //     const candidates = jobCandidates.map(candidateMapping => ({
+  //       ...candidateMapping.candidate.toJSON(),
+  //       match_score: candidateMapping.match_score // Add match_score to each candidate object
+  //     }));
+  //     res.status(200).json({ candidates });
+  //   } catch (error) {
+  //     res.status(500).json({ message: 'Internal server error', error: error.message });
+  //   }
+  // };
 
 
   exports.addToken = async (req, res) => {

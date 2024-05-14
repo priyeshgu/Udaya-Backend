@@ -49,7 +49,7 @@ const candidates = db.define('candidates', {
     allowNull: false
   },
   skills: {
-    type: DataTypes.STRING,
+    type: DataTypes.ARRAY(DataTypes.STRING),
     allowNull: false
   },
   current_position: {

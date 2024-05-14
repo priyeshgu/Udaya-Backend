@@ -23,7 +23,7 @@ const jobs = db.define('jobs', {
     allowNull: false
   },
   skills: {
-    type: DataTypes.STRING,
+    type: DataTypes.ARRAY(DataTypes.STRING),
     allowNull: false
   },
   openings: {
