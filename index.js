@@ -15,7 +15,7 @@ const app = express();
   }
 })();
 const corsOptions = {
-  origin: "https://udaya-3750c.firebaseapp.com",
+  origin: ["http://localhost:3000","https://udayasoln.netlify.app"]
   methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
   credentials: true,
 };
