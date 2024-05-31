@@ -3,6 +3,7 @@ const sequelize = require("./config/db");
 const applicationRoutes = require("./routes/applicationRoutes");
 const adminRoutes = require("./routes/adminRoutes");
 const cors = require("cors");
+const path = require('path');
 const app = express();
 
 // Sync the models with the database
@@ -22,6 +23,7 @@ const corsOptions = {
 app.use(express.json());
 app.use(cors(corsOptions));
 // app.use(cors());
+app.use('/resume-uploads', express.static(path.join(__dirname, 'resume-uploads')));
 app.use("/applications", applicationRoutes);
 app.use("/admin", adminRoutes);
 
