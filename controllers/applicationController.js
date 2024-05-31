@@ -159,10 +159,11 @@ exports.uploadResume = (req, res) => {
     if (!req.file) {
       return res.status(400).json({ message: "No file uploaded" });
     }
-    // const fileLocation = req.file.path; // Path of the uploaded file
-    const fileLocation =
-      "https://drive.google.com/file/d/178FjHCptG9_u_26IBqpid4o5puT3f8Z_/view?usp=sharing";
-    res.status(200).json({ fileLocation });
+    // const fileLocation =
+    //   "https://drive.google.com/file/d/178FjHCptG9_u_26IBqpid4o5puT3f8Z_/view?usp=sharing";
+    const fileLocation = req.file.path; // Path of the uploaded file
+    const fileName = req.file.filename; // Name of the uploaded file
+    res.status(200).json({ fileLocation, fileName });
   } catch (error) {
     res
       .status(500)
