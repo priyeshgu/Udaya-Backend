@@ -2,6 +2,7 @@ const express = require("express");
 const sequelize = require("./config/db");
 const applicationRoutes = require("./routes/applicationRoutes");
 const adminRoutes = require("./routes/adminRoutes");
+const emailService = require("./utils/email")
 const cors = require("cors");
 const path = require('path');
 const app = express();
@@ -15,17 +16,19 @@ const app = express();
     console.error("Error synchronizing database:", error);
   }
 })();
+
 const corsOptions = {
   origin: ["http://localhost:3000","https://udayasoln.netlify.app"],
   methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
   credentials: true,
 };
+
 app.use(express.json());
 app.use(cors(corsOptions));
-// app.use(cors());
 app.use('/resume-uploads', express.static(path.join(__dirname, 'resume-uploads')));
 app.use("/applications", applicationRoutes);
 app.use("/admin", adminRoutes);
+app.post('/send-email', emailService.mailService);
 
 // Start the Express server
 const PORT = process.env.PORT || 3001;
